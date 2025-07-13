@@ -11,6 +11,9 @@ _obj
 _test
 vendor/
 
+# Logs
+*.log
+
 # Compiled binary files
 *.exe
 *.out
