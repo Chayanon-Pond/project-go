@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { IoMoon } from "react-icons/io5";
+import { LuSun } from "react-icons/lu";
 
 const NavBar: React.FC = () => {
   const [theme, setTheme] = useState("light");
@@ -10,23 +12,38 @@ const NavBar: React.FC = () => {
   };
 
   return (
-    <div className="navbar bg-base-100 mb-4">
-      <div className="navbar-start">
-        <div className="dropdown">
-          <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 6h16M4 12h8m-8 6h16"
+    <div>
+      <div className="max-w-[900px] mx-auto">
+        <div className="navbar bg-base-100 shadow-sm mb-4">
+          {/* Left side - Brand */}
+          <div className="flex-1">
+            <a className="btn btn-ghost text-xl">
+              <img src="/react.png" alt="logo" className="w-[50px] h-[50px]" />
+              <span className="text-[40px]">+</span>
+              <img src="/go.png" alt="logo" className="w-[50px] h-[50px]" />
+              <span className="text-[40px]">=</span>
+              <img
+                src="/explode.png"
+                alt="logo"
+                className="w-[50px] h-[50px]"
               />
-            </svg>
+            </a>
+          </div>
+
+          {/* Right side - Theme toggle */}
+          <div className="flex-none">
+            <span>Daily Tasks</span>
+            <button
+              className="btn btn-ghost btn-circle"
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+            >
+              {theme === "light" ? (
+                <IoMoon className="w-5 h-5" />
+              ) : (
+                <LuSun className="w-5 h-5" />
+              )}
+            </button>
           </div>
         </div>
       </div>
