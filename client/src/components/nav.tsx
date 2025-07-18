@@ -1,14 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IoMoon } from "react-icons/io5";
 import { LuSun } from "react-icons/lu";
 
 const NavBar: React.FC = () => {
   const [theme, setTheme] = useState("light");
 
+  useEffect(() => {
+    // โหลด theme จาก localStorage
+    const savedTheme = localStorage.getItem("theme") || "light";
+    setTheme(savedTheme);
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }, []);
+
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
   };
 
   return (
@@ -32,7 +40,7 @@ const NavBar: React.FC = () => {
 
           {/* Right side - Theme toggle */}
           <div className="flex-none">
-            <span>Daily Tasks</span>
+            <span className="mr-4 font-semibold">Daily Tasks</span>
             <button
               className="btn btn-ghost btn-circle"
               onClick={toggleTheme}
