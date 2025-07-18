@@ -1,45 +1,88 @@
 import React, { useState } from "react";
 
-const SearchBar: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+interface TodoInputProps {
+  onAddTodo?: (todoText: string) => Promise<void> | void;
+  placeholder?: string;
+  disabled?: boolean;
+}
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+const TodoInput: React.FC<TodoInputProps> = ({
+  onAddTodo,
+  placeholder = "What needs to be done?",
+  disabled = false,
+}) => {
+  const [todoText, setTodoText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTodoText(event.target.value);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!todoText.trim()) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (onAddTodo) {
+        await onAddTodo(todoText.trim());
+        setTodoText("");
+      }
+    } catch (error) {
+      console.error("Error adding todo:", error);
+      alert("Failed to add todo. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSubmit(e);
+    }
   };
 
   return (
-    <div>
-      <div className="max-w-[900px] mx-auto mb-4">
-        <div className="join">
-          <div>
-            <label className="input validator join-item">
-              <svg
-                className="h-[1em] opacity-50"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-              >
-                <g
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                  strokeWidth="2.5"
-                  fill="none"
-                  stroke="currentColor"
-                >
-                  <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-                </g>
-              </svg>
-              <input type="email" placeholder="mail@site.com" required />
-            </label>
-            <div className="validator-hint hidden">
-              Enter valid email address
-            </div>
-          </div>
-          <button className="btn btn-neutral join-item text-[30px]">+</button>
+    <div className="w-full mb-8">
+      <form onSubmit={handleSubmit}>
+        <div className="flex gap-4">
+          <input
+            type="text"
+            value={todoText}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            disabled={disabled || isLoading}
+            className="flex-1 bg-base-100 backdrop-blur-sm border border-slate-600/30 rounded-xl px-6 py-4 text-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200"
+            maxLength={500}
+          />
+
+          <button
+            type="submit"
+            disabled={!todoText.trim() || disabled || isLoading}
+            className="bg-base-100 from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-slate-600 disabled:to-slate-600 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 min-w-[120px] flex items-center justify-center"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              "+"
+            )}
+          </button>
         </div>
-      </div>
+
+        <div className="flex justify-between items-center mt-3 px-2">
+          <div className="text-sm text-slate-400">
+            Press Enter or click "Add Task" to create a new task
+          </div>
+          <div className="text-sm text-slate-400">{todoText.length}/500</div>
+        </div>
+      </form>
     </div>
   );
 };
 
-export default SearchBar;
+export default TodoInput;
