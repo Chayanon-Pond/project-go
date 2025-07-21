@@ -28,7 +28,7 @@ func main() {
 
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file", err)
+		log.Println("Error loading .env file", err)
 	}
 	MONGO_URI := os.Getenv("MONGO_URI")
 	clientOptions := options.Client().ApplyURI(MONGO_URI)
@@ -50,7 +50,7 @@ func main() {
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000, http://localhost:5173", // สำหรับ React dev server
+		AllowOrigins: "http://localhost:3000, http://localhost:5173, https://project-go-sable.vercel.app", // สำหรับ React dev server
 		AllowHeaders: "Origin, Content-Type, Accept",
 		AllowMethods: "GET, POST, PATCH, DELETE, OPTIONS",
 	}))
