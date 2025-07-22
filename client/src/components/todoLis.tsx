@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import type { Todo } from "../types/Todo";
 import TodoItem from "./TodoItem";
 import TodoInput from "./todoForm";
-
-const API_BASE_URL = "http://localhost:4000/api";
+import { BASE_URL } from "../App";
 
 const TodoList: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -19,9 +18,9 @@ const TodoList: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      console.log("Fetching todos from:", `${API_BASE_URL}/todos`);
+      console.log("Fetching todos from:", `${BASE_URL}/todos`);
 
-      const response = await fetch(`${API_BASE_URL}/todos`);
+      const response = await fetch(`${BASE_URL}/todos`);
       console.log("Response status:", response.status);
 
       if (!response.ok) {
@@ -45,7 +44,7 @@ const TodoList: React.FC = () => {
     try {
       console.log("Adding todo:", body);
 
-      const response = await fetch(`${API_BASE_URL}/todos`, {
+      const response = await fetch(`${BASE_URL}/todos`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +71,7 @@ const TodoList: React.FC = () => {
 
   const handleToggleTodo = async (id: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/todos/${id}`, {
+      const response = await fetch(`${BASE_URL}/todos/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -102,7 +101,7 @@ const TodoList: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/todos/${id}`, {
+      const response = await fetch(`${BASE_URL}/todos/${id}`, {
         method: "DELETE",
       });
 
