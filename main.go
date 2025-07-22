@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -26,10 +25,16 @@ var collection *mongo.Collection
 func main() {
 	fmt.Println("Hello, World!")
 
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Println("Error loading .env file", err)
+	if os.Getenv("ENV") != "production" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatal("Error loading .env file", err)
+		}
 	}
+	// err := godotenv.Load(".env")
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file", err)
+	// }
 	MONGO_URI := os.Getenv("MONGO_URI")
 	clientOptions := options.Client().ApplyURI(MONGO_URI)
 	client, err := mongo.Connect(context.Background(), clientOptions)
@@ -49,11 +54,11 @@ func main() {
 
 	app := fiber.New()
 
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000, http://localhost:5173, https://project-go-sable.vercel.app", // สำหรับ React dev server
-		AllowHeaders: "Origin, Content-Type, Accept",
-		AllowMethods: "GET, POST, PATCH, DELETE, OPTIONS",
-	}))
+	// app.Use(cors.New(cors.Config{
+	// 	AllowOrigins: "http://localhost:3000, http://localhost:5173, https://project-go-sable.vercel.app", // สำหรับ React dev server
+	// 	AllowHeaders: "Origin, Content-Type, Accept",
+	// 	AllowMethods: "GET, POST, PATCH, DELETE, OPTIONS",
+	// }))
 
 	app.Get("/api/todos", getTodos)
 	app.Post("/api/todos", createTodo)
@@ -65,6 +70,10 @@ func main() {
 		port = "4000"
 	}
 	log.Fatal(app.Listen("0.0.0.0:" + port))
+
+	if os.Getenv("ENV") == "production" {
+		app.Static("/", "./client/dist")
+	}
 
 }
 
