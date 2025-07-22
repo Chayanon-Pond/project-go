@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -54,11 +55,11 @@ func main() {
 
 	app := fiber.New()
 
-	// app.Use(cors.New(cors.Config{
-	// 	AllowOrigins: "http://localhost:3000, http://localhost:5173, https://project-go-sable.vercel.app", // สำหรับ React dev server
-	// 	AllowHeaders: "Origin, Content-Type, Accept",
-	// 	AllowMethods: "GET, POST, PATCH, DELETE, OPTIONS",
-	// }))
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3000,http://localhost:5173,https://project-go-sable.vercel.app", // สำหรับ React dev server
+		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowMethods: "GET, POST, PATCH, DELETE, OPTIONS",
+	}))
 
 	app.Get("/api/todos", getTodos)
 	app.Post("/api/todos", createTodo)
@@ -69,11 +70,11 @@ func main() {
 	if port == "" {
 		port = "4000"
 	}
-	log.Fatal(app.Listen("0.0.0.0:" + port))
 
 	if os.Getenv("ENV") == "production" {
 		app.Static("/", "./client/dist")
 	}
+	log.Fatal(app.Listen("0.0.0.0:" + port))
 
 }
 
