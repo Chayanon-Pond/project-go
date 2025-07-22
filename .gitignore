@@ -1,4 +1,5 @@
 .env
+.env.local
 node_modules
 
 # compiled objects files, Static files, and Dynamic lis (Shared objects)
