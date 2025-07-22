@@ -56,7 +56,7 @@ func main() {
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000,http://localhost:5173,https://project-go-sable.vercel.app", // สำหรับ React dev server
+		AllowOrigins: "http://localhost:3000,http://localhost:5173,https://*.vercel.app", // อนุญาต Vercel domains ทั้งหมด
 		AllowHeaders: "Origin, Content-Type, Accept",
 		AllowMethods: "GET, POST, PATCH, DELETE, OPTIONS",
 	}))
