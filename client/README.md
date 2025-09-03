@@ -25,6 +25,8 @@ PORT=4000
 MONGO_URI=your_mongodb_uri
 JWT_SECRET=change-me
 ENV=development
+# Comma-separated origins; defaults to * when unset
+ALLOW_ORIGINS=http://localhost:5173,https://your-frontend-domain
 ```
 
 Frontend `.env` (client directory, optional):

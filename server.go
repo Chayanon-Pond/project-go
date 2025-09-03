@@ -50,8 +50,14 @@ func run() {
 	})
 
 	app := fiber.New()
+	// Configure CORS: allow multiple origins from env or default to permissive for header-based auth
+	origins := os.Getenv("ALLOW_ORIGINS")
+	if origins == "" {
+		// Using Authorization header (no cookies), so wildcard is acceptable
+		origins = "*"
+	}
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000,http://localhost:5173,https://project-go-sable.vercel.app",
+		AllowOrigins: origins,
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET, POST, PATCH, DELETE, OPTIONS",
 	}))
