@@ -15,11 +15,34 @@ const AuthModal: React.FC<Props> = ({ onClose }) => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const validateEmail = (v: string) => {
+    if (!v.trim()) return "Email is required";
+    if (!emailRegex.test(v)) return "Enter a valid email";
+    return null;
+  };
+  const validatePassword = (v: string) => {
+    if (!v) return "Password is required";
+    if (v.length < 6) return "Password must be at least 6 characters";
+    return null;
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    // client-side validation
+    const eErr = validateEmail(email);
+    const pErr = validatePassword(password);
+    setEmailError(eErr);
+    setPasswordError(pErr);
+    if (eErr || pErr) {
+      setLoading(false);
+      return;
+    }
     try {
       const url = `${BASE_URL}/auth/login`;
       const localUrl = `http://localhost:4000/api/auth/login`;
@@ -62,7 +85,13 @@ const AuthModal: React.FC<Props> = ({ onClose }) => {
         ? "Network error connecting to the API. If you're on production, ensure VITE_API_URL points to a server with /api/auth/login."
         : (raw.startsWith("Cannot ") || raw.includes("404")
           ? `Login endpoint is not available on the server (${BASE_URL}/auth/login). Configure VITE_API_URL to a backend that has /api/auth/*.`
-          : raw);
+          : (raw.includes("Invalid credentials") || raw.includes("401")
+            ? "Invalid email or password"
+            : raw));
+      if (finalMsg === "Invalid email or password") {
+        setEmailError("Check your email");
+        setPasswordError("Check your password");
+      }
       setError(finalMsg);
     } finally {
       setLoading(false);
@@ -78,9 +107,34 @@ const AuthModal: React.FC<Props> = ({ onClose }) => {
         </div>
         {error && <div className="alert alert-error mb-3">{error}</div>}
         <form onSubmit={submit} className="space-y-3">
-          <input className="input input-bordered w-full" placeholder="Email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} required />
-          <input className="input input-bordered w-full" placeholder="Password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} required minLength={6} />
-          <button className="btn btn-primary w-full" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</button>
+          <div>
+            <input
+              className={`input input-bordered w-full ${emailError ? "input-error" : ""}`}
+              placeholder="Email"
+              type="email"
+              value={email}
+              onChange={(e)=>{ setEmail(e.target.value); if (error) setError(null); setEmailError(null); }}
+              onBlur={() => setEmailError(validateEmail(email))}
+              required
+            />
+            {emailError && <p className="text-error text-xs mt-1">{emailError}</p>}
+          </div>
+          <div>
+            <input
+              className={`input input-bordered w-full ${passwordError ? "input-error" : ""}`}
+              placeholder="Password"
+              type="password"
+              value={password}
+              onChange={(e)=>{ setPassword(e.target.value); if (error) setError(null); setPasswordError(null); }}
+              onBlur={() => setPasswordError(validatePassword(password))}
+              required
+              minLength={6}
+            />
+            {passwordError && <p className="text-error text-xs mt-1">{passwordError}</p>}
+          </div>
+          <button className="btn btn-primary w-full" disabled={loading || !!emailError || !!passwordError}>
+            {loading ? "Signing in..." : "Sign in"}
+          </button>
         </form>
         <div className="mt-4 text-sm flex items-center justify-between">
           <span className="opacity-80">Don’t have an account?</span>

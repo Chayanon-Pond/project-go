@@ -14,16 +14,25 @@ const SignUpPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const validate = () => {
+    const nErr = name.trim().length < 2 ? "Name must be at least 2 characters" : null;
+    const eErr = !email.trim() ? "Email is required" : (!emailRegex.test(email) ? "Enter a valid email" : null);
+    const pErr = password.length < 6 ? "Password must be at least 6 characters" : null;
+    setNameError(nErr); setEmailError(eErr); setPasswordError(pErr);
+    return !(nErr || eErr || pErr);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    if (!name || !email || !password) {
-      setError("Please fill in all fields.");
-      return;
-    }
+  if (!validate()) return;
 
     setLoading(true);
     try {
@@ -86,10 +95,45 @@ const SignUpPage: React.FC = () => {
         <div className="max-w-md mx-auto bg-base-100 border border-slate-600/30 rounded-xl p-6">
           <h1 className="text-2xl font-bold mb-4">Sign up</h1>
           <form onSubmit={submit} className="space-y-3">
-            <input className="input input-bordered w-full" placeholder="Name" value={name} onChange={(e)=>setName(e.target.value)} required />
-            <input className="input input-bordered w-full" placeholder="Email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} required />
-            <input className="input input-bordered w-full" placeholder="Password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} required minLength={6} />
-            <button className="btn btn-primary w-full" disabled={loading}>{loading ? "Submitting..." : "Create account"}</button>
+            <div>
+              <input
+                className={`input input-bordered w-full ${nameError ? "input-error" : ""}`}
+                placeholder="Name"
+                value={name}
+                onChange={(e)=>{ setName(e.target.value); setNameError(null); if (error) setError(null); }}
+                onBlur={() => setNameError(name.trim().length < 2 ? "Name must be at least 2 characters" : null)}
+                required
+              />
+              {nameError && <p className="text-error text-xs mt-1">{nameError}</p>}
+            </div>
+            <div>
+              <input
+                className={`input input-bordered w-full ${emailError ? "input-error" : ""}`}
+                placeholder="Email"
+                type="email"
+                value={email}
+                onChange={(e)=>{ setEmail(e.target.value); setEmailError(null); if (error) setError(null); }}
+                onBlur={() => setEmailError(!email.trim() ? "Email is required" : (!emailRegex.test(email) ? "Enter a valid email" : null))}
+                required
+              />
+              {emailError && <p className="text-error text-xs mt-1">{emailError}</p>}
+            </div>
+            <div>
+              <input
+                className={`input input-bordered w-full ${passwordError ? "input-error" : ""}`}
+                placeholder="Password"
+                type="password"
+                value={password}
+                onChange={(e)=>{ setPassword(e.target.value); setPasswordError(null); if (error) setError(null); }}
+                onBlur={() => setPasswordError(password.length < 6 ? "Password must be at least 6 characters" : null)}
+                required
+                minLength={6}
+              />
+              {passwordError && <p className="text-error text-xs mt-1">{passwordError}</p>}
+            </div>
+            <button className="btn btn-primary w-full" disabled={loading || !!nameError || !!emailError || !!passwordError}>
+              {loading ? "Submitting..." : "Create account"}
+            </button>
           </form>
           {error && <div className="alert alert-error mt-3">{error}</div>}
           {success && <div className="alert alert-success mt-3">{success}</div>}

@@ -115,6 +115,12 @@ func updateTodo(c *fiber.Ctx) error {
 		if *payload.DueDate == nil {
 			toSet["dueDate"] = nil
 		} else {
+			// validate not in the past
+			candidate := (**payload.DueDate).Truncate(24 * time.Hour)
+			today := time.Now().UTC().Truncate(24 * time.Hour)
+			if candidate.Before(today) {
+				return c.Status(400).JSON(fiber.Map{"error": "Due date cannot be in the past"})
+			}
 			toSet["dueDate"] = **payload.DueDate
 		}
 	}

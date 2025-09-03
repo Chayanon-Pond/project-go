@@ -25,6 +25,8 @@ const TodoInput: React.FC<TodoInputProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
   const [dueDate, setDueDate] = useState<string>("");
+  const [dateError, setDateError] = useState<string>("");
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTodoText(event.target.value);
@@ -42,17 +44,24 @@ const TodoInput: React.FC<TodoInputProps> = ({
       return;
     }
 
+    // validate past date
+    if (dueDate && dueDate < todayStr) {
+      setDateError("Due date cannot be in the past");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       if (onAddTodo) {
-        await onAddTodo({
+  await onAddTodo({
           body: todoText.trim(),
           priority,
           dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
         });
         setTodoText("");
         setDueDate("");
+  setDateError("");
       }
     } catch (error) {
       console.error("Error adding todo:", error);
@@ -97,14 +106,19 @@ const TodoInput: React.FC<TodoInputProps> = ({
           <input
             type="date"
             value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setDueDate(v);
+              if (v && v < todayStr) setDateError("Due date cannot be in the past"); else setDateError("");
+            }}
             disabled={disabled || isLoading}
+            min={todayStr}
             className="md:col-span-2 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-4"
           />
 
           <button
             type="submit"
-            disabled={!todoText.trim() || disabled || isLoading}
+            disabled={!todoText.trim() || !!dateError || disabled || isLoading}
             className="md:col-span-2 btn btn-primary disabled:btn-disabled min-w-[120px] h-[52px]"
           >
             {isLoading ? (
@@ -119,6 +133,10 @@ const TodoInput: React.FC<TodoInputProps> = ({
           <div className="text-sm text-slate-400">Press Enter or click "Add Task" to create a new task</div>
           <div className="text-sm text-slate-400">{todoText.length}/500</div>
         </div>
+
+        {dateError && (
+          <div className="mt-2 px-2 text-sm text-error">{dateError}</div>
+        )}
       </form>
 
       {showGate && (

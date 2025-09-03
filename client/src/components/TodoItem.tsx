@@ -15,6 +15,8 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete, onEdit })
   const [editText, setEditText] = useState(todo.body);
   const [editPriority, setEditPriority] = useState<string>(todo.priority || "medium");
   const [editDueDate, setEditDueDate] = useState<string>(todo.dueDate ? todo.dueDate.slice(0, 10) : "");
+  const [dateError, setDateError] = useState<string>("");
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const handleToggle = async () => {
     setIsToggling(true);
@@ -40,6 +42,10 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete, onEdit })
 
   const handleSave = async () => {
     if (!onEdit) return setIsEditing(false);
+    if (editDueDate && editDueDate < todayStr) {
+      setDateError("Due date cannot be in the past");
+      return;
+    }
     try {
       await onEdit(todo._id, {
         body: editText,
@@ -47,6 +53,7 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete, onEdit })
         dueDate: editDueDate ? new Date(editDueDate).toISOString() : null,
       });
       setIsEditing(false);
+      setDateError("");
     } catch (e) {
       // error already handled upstream
     }
@@ -76,7 +83,12 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete, onEdit })
               type="date"
               className="md:col-span-2 bg-base-100 text-base-content border border-base-300 rounded-xl px-3 py-2"
               value={editDueDate}
-              onChange={(e) => setEditDueDate(e.target.value)}
+              min={todayStr}
+              onChange={(e) => {
+                const v = e.target.value;
+                setEditDueDate(v);
+                if (v && v < todayStr) setDateError("Due date cannot be in the past"); else setDateError("");
+              }}
             />
           </div>
         ) : (
@@ -144,6 +156,9 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete, onEdit })
             </svg>
           )}
         </button>
+        {isEditing && dateError && (
+          <span className="text-error text-xs ml-2 self-center">{dateError}</span>
+        )}
         {/* Toggle Complete Button */}
         <button
           onClick={handleToggle}
