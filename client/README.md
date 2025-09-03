@@ -1,69 +1,72 @@
-# React + TypeScript + Vite
+## Project: React + Go (Fiber) Todo App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modern Todo application with authentication, filtering, priorities, due dates, and a clean UI powered by React + Vite + Tailwind/DaisyUI and a Go/Fiber + MongoDB backend.
 
-Currently, two official plugins are available:
+### Features
+- JWT Authentication (register, login, me)
+- Create/Update/Delete todos with:
+  - priority (low/medium/high)
+  - optional due date
+  - timestamps (created/updated/completed)
+- Search, status filter (All/Active/Completed), priority filter
+- Client-side sorting (Newest/Oldest/Due soon/Due last)
+- Inline edit, quick toggle complete, clear completed
+- Theme-aware UI (light/dark)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Prerequisites
+- Node.js 18+
+- Go 1.21+
+- MongoDB instance (Atlas or local)
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Environment
+Backend `.env` (root directory):
+```
+PORT=4000
+MONGO_URI=your_mongodb_uri
+JWT_SECRET=change-me
+ENV=development
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Frontend `.env` (client directory, optional):
 ```
+VITE_API_URL=http://localhost:4000/api
+```
+
+### Run locally
+Backend (from repo root):
+```
+go mod tidy
+go run .
+```
+
+Frontend (from `client`):
+```
+npm install
+npm run dev
+```
+
+Open http://localhost:5173
+
+### Build
+Frontend production build (from `client`):
+```
+npm run build
+```
+Backend binary (from repo root):
+```
+go build -o tmp/main.exe .
+```
+
+### API (summary)
+- POST `/api/auth/register` { name, email, password }
+- POST `/api/auth/login` { email, password }
+- GET  `/api/auth/me` (Bearer token)
+- GET  `/api/todos?search=&status=&priority=`
+- POST `/api/todos` (Bearer token)
+- PATCH `/api/todos/:id`
+- DELETE `/api/todos/:id`
+
+### Troubleshooting
+- CORS: backend allows http://localhost:5173 by default
+- Set `VITE_API_URL` if hosting backend elsewhere
+- If styles look off, ensure Tailwind + DaisyUI versions match package.json

@@ -1,7 +1,15 @@
 import React, { useState } from "react";
+import { useAuth } from "../hooks/useAuth";
+import AuthGateModal from "./AuthGateModal";
+
+interface TodoPayload {
+  body: string;
+  priority?: "low" | "medium" | "high";
+  dueDate?: string | null;
+}
 
 interface TodoInputProps {
-  onAddTodo?: (todoText: string) => Promise<void> | void;
+  onAddTodo?: (todo: TodoPayload) => Promise<void> | void;
   placeholder?: string;
   disabled?: boolean;
 }
@@ -11,8 +19,12 @@ const TodoInput: React.FC<TodoInputProps> = ({
   placeholder = "What needs to be done?",
   disabled = false,
 }) => {
+  const { token } = useAuth();
+  const [showGate, setShowGate] = useState(false);
   const [todoText, setTodoText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
+  const [dueDate, setDueDate] = useState<string>("");
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTodoText(event.target.value);
@@ -25,12 +37,22 @@ const TodoInput: React.FC<TodoInputProps> = ({
       return;
     }
 
+    if (!token) {
+      setShowGate(true);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       if (onAddTodo) {
-        await onAddTodo(todoText.trim());
+        await onAddTodo({
+          body: todoText.trim(),
+          priority,
+          dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+        });
         setTodoText("");
+        setDueDate("");
       }
     } catch (error) {
       console.error("Error adding todo:", error);
@@ -49,7 +71,7 @@ const TodoInput: React.FC<TodoInputProps> = ({
   return (
     <div className="w-full mb-8">
       <form onSubmit={handleSubmit}>
-        <div className="flex gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
           <input
             type="text"
             value={todoText}
@@ -57,14 +79,33 @@ const TodoInput: React.FC<TodoInputProps> = ({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={disabled || isLoading}
-            className="flex-1 bg-base-100 backdrop-blur-sm border border-slate-600/30 rounded-xl px-6 py-4 text-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200"
+            className="md:col-span-6 bg-base-100 text-base-content backdrop-blur-sm border border-base-300 rounded-xl px-6 py-4 text-lg placeholder-base-content/50 focus:outline-none focus:ring-2 focus:ring-primary/60 focus:border-transparent transition-all duration-200"
             maxLength={500}
+          />
+
+          <select
+            value={priority}
+            onChange={(e) => setPriority(e.target.value as any)}
+            disabled={disabled || isLoading}
+            className="md:col-span-2 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-4"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            disabled={disabled || isLoading}
+            className="md:col-span-2 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-4"
           />
 
           <button
             type="submit"
             disabled={!todoText.trim() || disabled || isLoading}
-            className="bg-base-100 from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-slate-600 disabled:to-slate-600 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 min-w-[120px] flex items-center justify-center"
+            className="md:col-span-2 btn btn-primary disabled:btn-disabled min-w-[120px] h-[52px]"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -75,12 +116,21 @@ const TodoInput: React.FC<TodoInputProps> = ({
         </div>
 
         <div className="flex justify-between items-center mt-3 px-2">
-          <div className="text-sm text-slate-400">
-            Press Enter or click "Add Task" to create a new task
-          </div>
+          <div className="text-sm text-slate-400">Press Enter or click "Add Task" to create a new task</div>
           <div className="text-sm text-slate-400">{todoText.length}/500</div>
         </div>
       </form>
+
+      {showGate && (
+        <AuthGateModal
+          onClose={() => setShowGate(false)}
+          onLoginClick={() => {
+            setShowGate(false);
+            // trigger existing login modal by dispatching a custom event consumed by Nav
+            window.dispatchEvent(new CustomEvent("open-login-modal"));
+          }}
+        />
+      )}
     </div>
   );
 };
