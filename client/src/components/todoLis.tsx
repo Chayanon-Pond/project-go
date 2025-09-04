@@ -4,8 +4,13 @@ import TodoItem from "./TodoItem";
 import TodoInput from "./todoForm";
 import { BASE_URL } from "../App";
 import { useAuth } from "../hooks/useAuth";
+import { getWishlistIds } from "../utils/wishlistCache";
 
-const TodoList: React.FC = () => {
+interface TodoListProps {
+  starredOnly?: boolean;
+}
+
+const TodoList: React.FC<TodoListProps> = ({ starredOnly = false }) => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +30,20 @@ const TodoList: React.FC = () => {
   useEffect(() => {
     fetchTodos();
   }, [debouncedSearch, status, priority]);
+
+  // Refetch when wishlist cache changes
+  useEffect(() => {
+    const onWishlist = () => setTodos((prev) => [...prev]);
+    window.addEventListener("wishlist-updated", onWishlist);
+    return () => window.removeEventListener("wishlist-updated", onWishlist);
+  }, []);
+
+  // Keep lists in sync: refetch when a todo is mutated elsewhere
+  useEffect(() => {
+    const handler = () => fetchTodos();
+    window.addEventListener("todos-refetch", handler);
+    return () => window.removeEventListener("todos-refetch", handler);
+  }, []);
 
   const fetchTodos = async () => {
     try {
@@ -72,6 +91,11 @@ const TodoList: React.FC = () => {
       list = list.filter((t) => (status === "completed" ? t.completed : !t.completed));
     }
     if (priority) list = list.filter((t) => (t.priority || "").toLowerCase() === priority.toLowerCase());
+    if (starredOnly) {
+      // server truth first, then overlay client cache as fallback
+      const cached = getWishlistIds(token ? JSON.parse(localStorage.getItem("auth_user") || "{}")?._id : null);
+      list = list.filter((t) => !!t.starred || cached.has(t._id));
+    }
     // sorting
     list.sort((a, b) => {
       const ca = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -86,7 +110,7 @@ const TodoList: React.FC = () => {
       return db - da; // dueDesc
     });
     return list;
-  }, [todos, debouncedSearch, status, priority, sort]);
+  }, [todos, debouncedSearch, status, priority, sort, starredOnly]);
   const handleAddTodo = async (payload: { body: string; priority?: string; dueDate?: string | null }) => {
     try {
       console.log("Adding todo:", payload);
@@ -146,7 +170,7 @@ const TodoList: React.FC = () => {
     }
   };
 
-  const handleEditTodo = async (id: string, updates: Partial<Pick<Todo, "body" | "priority" | "dueDate">>) => {
+  const handleEditTodo = async (id: string, updates: Partial<Pick<Todo, "body" | "priority" | "dueDate" | "starred">>) => {
     try {
       const response = await fetch(`${BASE_URL}/todos/${id}`, {
         method: "PATCH",
@@ -154,9 +178,7 @@ const TodoList: React.FC = () => {
         body: JSON.stringify(updates),
       });
       if (!response.ok) throw new Error("Failed to edit todo");
-      setTodos((prev) =>
-        prev.map((t) => (t._id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t))
-      );
+  setTodos((prev) => prev.map((t) => (t._id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t)));
     } catch (err) {
       console.error("Error editing todo:", err);
       alert("Failed to edit todo");
@@ -252,14 +274,16 @@ const TodoList: React.FC = () => {
           )}
         </div>
 
-        {/* Add Todo Input */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <TodoInput onAddTodo={handleAddTodo} />
-        </div>
+        {/* Add Todo Input (hide on Wishlist) */}
+        {!starredOnly && (
+          <div className="max-w-4xl mx-auto mb-8">
+            <TodoInput onAddTodo={handleAddTodo} />
+          </div>
+        )}
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-4 tracking-wider">
-            TODAY'S TASKS
+            {starredOnly ? "WISHLIST" : "TODAY'S TASKS"}
           </h1>
         </div>
 
@@ -281,14 +305,14 @@ const TodoList: React.FC = () => {
               </button>
             </div>
           )}
-          {visibleTodos.length === 0 ? (
+      {visibleTodos.length === 0 ? (
             <div className="text-center py-20">
               <div className="text-6xl mb-6">📝</div>
               <h3 className="text-2xl font-semibold mb-4 text-base-content">
-                No tasks yet
+        {starredOnly ? "No wishlist items yet" : "No tasks yet"}
               </h3>
               <p className="text-base-content/60 text-lg">
-                Add your first task above to get started!
+        {starredOnly ? "Star tasks you love to see them here." : "Add your first task above to get started!"}
               </p>
             </div>
           ) : (

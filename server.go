@@ -68,12 +68,14 @@ func run() {
 	app.Post("/api/auth/register", registerHandler)
 	app.Post("/api/auth/login", loginHandler)
 	app.Get("/api/auth/me", authMiddleware, meHandler)
+	app.Patch("/api/auth/me", authMiddleware, updateMeHandler)
 
 	// Todo routes
 	app.Get("/api/todos", getTodos)
 	app.Post("/api/todos", authMiddleware, createTodo)
-	app.Patch("/api/todos/:id", updateTodo)
-	app.Delete("/api/todos/:id", deleteTodos)
+	app.Patch("/api/todos/:id", authMiddleware, updateTodo)
+	app.Patch("/api/todos/:id/star", authMiddleware, toggleStarred)
+	app.Delete("/api/todos/:id", authMiddleware, deleteTodos)
 
 	port := os.Getenv("PORT")
 	if port == "" {

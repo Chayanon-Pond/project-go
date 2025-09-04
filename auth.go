@@ -102,6 +102,7 @@ func validateRegister(name, email, password string) string {
 func registerHandler(c *fiber.Ctx) error {
 	var payload struct {
 		Name     string `json:"name"`
+		Username string `json:"username"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
@@ -126,11 +127,13 @@ func registerHandler(c *fiber.Ctx) error {
 	now := time.Now().UTC()
 	user := &User{
 		Name:         payload.Name,
+		Username:     strings.TrimSpace(payload.Username),
 		Email:        strings.ToLower(payload.Email),
 		PasswordHash: string(hash),
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
+	if user.Username == "" { user.Username = strings.TrimSpace(payload.Name) }
 	res, err := usersCollection.InsertOne(c.Context(), user)
 	if err != nil {
 		if writeErr, ok := err.(mongo.WriteException); ok {
@@ -152,6 +155,7 @@ func registerHandler(c *fiber.Ctx) error {
 		"user": fiber.Map{
 			"_id":       user.ID.Hex(),
 			"name":      user.Name,
+			"username":  user.Username,
 			"email":     user.Email,
 			"createdAt": user.CreatedAt,
 			"updatedAt": user.UpdatedAt,
@@ -186,6 +190,7 @@ func loginHandler(c *fiber.Ctx) error {
 		"user": fiber.Map{
 			"_id":       user.ID.Hex(),
 			"name":      user.Name,
+			"username":  user.Username,
 			"email":     user.Email,
 			"createdAt": user.CreatedAt,
 			"updatedAt": user.UpdatedAt,
@@ -209,7 +214,38 @@ func meHandler(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"_id":       user.ID.Hex(),
 		"name":      user.Name,
+		"username":  user.Username,
 		"email":     user.Email,
+		"createdAt": user.CreatedAt,
+		"updatedAt": user.UpdatedAt,
+	})
+}
+
+// update current user profile
+func updateMeHandler(c *fiber.Ctx) error {
+	userID := c.Locals("userId").(string)
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil { return c.Status(400).JSON(fiber.Map{"error": "Invalid user id"}) }
+	var payload struct{
+		Name string `json:"name"`
+		Username string `json:"username"`
+	}
+	if err := c.BodyParser(&payload); err != nil { return c.Status(400).JSON(fiber.Map{"error":"Invalid body"}) }
+	toSet := bson.M{"updatedAt": time.Now().UTC()}
+	if strings.TrimSpace(payload.Name) != "" { toSet["name"] = strings.TrimSpace(payload.Name) }
+	if strings.TrimSpace(payload.Username) != "" { toSet["username"] = strings.TrimSpace(payload.Username) }
+	if len(toSet) == 1 { // only updatedAt
+		return c.Status(400).JSON(fiber.Map{"error":"No changes"})
+	}
+	res := usersCollection.FindOneAndUpdate(c.Context(), bson.M{"_id": oid}, bson.M{"$set": toSet},)
+	if res.Err() != nil { if res.Err() == mongo.ErrNoDocuments { return c.Status(404).JSON(fiber.Map{"error":"User not found"}) } ; return res.Err() }
+	var user User
+	if err := usersCollection.FindOne(c.Context(), bson.M{"_id": oid}).Decode(&user); err != nil { return err }
+	return c.JSON(fiber.Map{
+		"_id": user.ID.Hex(),
+		"name": user.Name,
+		"username": user.Username,
+		"email": user.Email,
 		"createdAt": user.CreatedAt,
 		"updatedAt": user.UpdatedAt,
 	})
