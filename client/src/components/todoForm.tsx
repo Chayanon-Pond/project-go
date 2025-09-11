@@ -54,14 +54,14 @@ const TodoInput: React.FC<TodoInputProps> = ({
 
     try {
       if (onAddTodo) {
-  await onAddTodo({
+        await onAddTodo({
           body: todoText.trim(),
           priority,
           dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
         });
         setTodoText("");
         setDueDate("");
-  setDateError("");
+        setDateError("");
       }
     } catch (error) {
       console.error("Error adding todo:", error);
@@ -109,11 +109,13 @@ const TodoInput: React.FC<TodoInputProps> = ({
             onChange={(e) => {
               const v = e.target.value;
               setDueDate(v);
-              if (v && v < todayStr) setDateError("Due date cannot be in the past"); else setDateError("");
+              if (v && v < todayStr)
+                setDateError("Due date cannot be in the past");
+              else setDateError("");
             }}
             disabled={disabled || isLoading}
             min={todayStr}
-            className="md:col-span-2 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-4"
+            className="md:col-span-3 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-4"
           />
 
           <button
@@ -124,13 +126,15 @@ const TodoInput: React.FC<TodoInputProps> = ({
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              "+"
+              "Add"
             )}
           </button>
         </div>
 
         <div className="flex justify-between items-center mt-3 px-2">
-          <div className="text-sm text-slate-400">Press Enter or click "Add Task" to create a new task</div>
+          <div className="text-sm text-slate-400">
+            Press Enter or click "Add Task" to create a new task
+          </div>
           <div className="text-sm text-slate-400">{todoText.length}/500</div>
         </div>
 

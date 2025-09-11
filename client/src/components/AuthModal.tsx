@@ -98,6 +98,8 @@ const AuthModal: React.FC<Props> = ({ onClose }) => {
     }
   };
 
+  // Demo login helper previously existed; replaced by static demo credentials text below
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-base-100 text-base-content rounded-xl p-6 w-full max-w-md border border-slate-600/30">
@@ -136,6 +138,9 @@ const AuthModal: React.FC<Props> = ({ onClose }) => {
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
+        <div className="mt-3 text-sm opacity-80">
+          Demo user: <span className="font-semibold">cerepe3206@neuraxo.com</span> &nbsp; password: <span className="font-semibold">ppond333</span>
+        </div>
         <div className="mt-4 text-sm flex items-center justify-between">
           <span className="opacity-80">Don’t have an account?</span>
           <button
