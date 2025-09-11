@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"strings"
 	"time"
 
@@ -83,6 +84,7 @@ func createTodo(c *fiber.Ctx) error {
 		Body:      payload.Body,
 		Completed: false,
 	Starred:   payload.Starred,
+	StarredBy: []primitive.ObjectID{},
 		Priority:  payload.Priority,
 		DueDate:   payload.DueDate,
 		CreatedAt: now,
@@ -116,28 +118,9 @@ func updateTodo(c *fiber.Ctx) error {
 		toSet["body"] = *payload.Body
 	}
 	if payload.Starred != nil {
-		// Require auth and ownership to star/unstar
-		uid, _ := c.Locals("userId").(string)
-		if uid == "" {
-			return c.Status(401).JSON(fiber.Map{"error": "Authentication required"})
-		}
-		// verify ownership
-		var existing Todo
-		if err := collection.FindOne(c.Context(), bson.M{"_id": objectID}).Decode(&existing); err != nil {
-			if err == mongo.ErrNoDocuments {
-				return c.Status(404).JSON(fiber.Map{"error": "Todo not found"})
-			}
-			return err
-		}
-		// If the todo has no owner yet, claim ownership for the current user when starring
-		if existing.OwnerID == nil {
-			if oid, err := primitive.ObjectIDFromHex(uid); err == nil {
-				toSet["ownerId"] = oid
-			}
-		} else if existing.OwnerID.Hex() != uid {
-			return c.Status(403).JSON(fiber.Map{"error": "Forbidden"})
-		}
-		toSet["starred"] = *payload.Starred
+	// For starred flag updates via generic PATCH we will set the boolean
+	// and leave per-user starredBy handling to the dedicated endpoint
+	toSet["starred"] = *payload.Starred
 	}
 	if payload.Priority != nil {
 		toSet["priority"] = *payload.Priority
@@ -163,7 +146,7 @@ func updateTodo(c *fiber.Ctx) error {
 		} else {
 			toSet["completedAt"] = nil
 		}
-	} else if payload.Body == nil && payload.Priority == nil && payload.DueDate == nil {
+	} else if payload.Body == nil && payload.Priority == nil && payload.DueDate == nil && payload.Completed == nil && payload.Starred == nil {
 		var existing Todo
 		if err := collection.FindOne(c.Context(), bson.M{"_id": objectID}).Decode(&existing); err != nil {
 			if err == mongo.ErrNoDocuments {
@@ -204,7 +187,8 @@ func deleteTodos(c *fiber.Ctx) error {
 	}
 	if existing.OwnerID != nil {
 		if uid == "" || existing.OwnerID.Hex() != uid {
-			return c.Status(403).JSON(fiber.Map{"error": "Forbidden"})
+			// Provide a reason to help clients and debugging tools distinguish ownership rejections
+			return c.Status(403).JSON(fiber.Map{"error": "Forbidden", "reason": "ownership_mismatch", "message": "You are not the owner of this item"})
 		}
 	}
 	if _, err := collection.DeleteOne(c.Context(), bson.M{"_id": objectID}); err != nil {
@@ -226,6 +210,7 @@ func toggleStarred(c *fiber.Ctx) error {
 	}
 	var payload struct{ Starred bool `json:"starred"` }
 	_ = c.BodyParser(&payload)
+	// Ensure the todo exists
 	var existing Todo
 	if err := collection.FindOne(c.Context(), bson.M{"_id": objectID}).Decode(&existing); err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -233,18 +218,30 @@ func toggleStarred(c *fiber.Ctx) error {
 		}
 		return err
 	}
-	// If no owner, claim it for current user when starring via this endpoint; otherwise require ownership
-	set := bson.M{"starred": payload.Starred, "updatedAt": time.Now().UTC()}
-	if existing.OwnerID == nil {
-		if oid, err := primitive.ObjectIDFromHex(uid); err == nil {
-			set["ownerId"] = oid
-		}
-	} else if existing.OwnerID.Hex() != uid {
-		return c.Status(403).JSON(fiber.Map{"error": "Forbidden"})
+
+	// Per-user wishlist: add/remove current user id from starredBy array.
+	// We intentionally do NOT check ownership here -- any authenticated user
+	// may add/remove themselves to/from starredBy.
+	log.Printf("toggleStarred: user=%s todo=%s payload=%v owner=%v", uid, id, payload.Starred, existing.OwnerID)
+	oid, err := primitive.ObjectIDFromHex(uid)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid user id"})
 	}
-	update := bson.M{"$set": set}
-	if _, err := collection.UpdateOne(c.Context(), bson.M{"_id": objectID}, update); err != nil {
+
+	var update bson.M
+	if payload.Starred {
+		update = bson.M{"$addToSet": bson.M{"starredBy": oid}, "$set": bson.M{"starred": true, "updatedAt": time.Now().UTC()}}
+	} else {
+		update = bson.M{"$pull": bson.M{"starredBy": oid}, "$set": bson.M{"updatedAt": time.Now().UTC()}}
+	}
+
+	res, err := collection.UpdateOne(c.Context(), bson.M{"_id": objectID}, update)
+	if err != nil {
 		return err
 	}
+	if res.MatchedCount == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "Todo not found"})
+	}
+
 	return c.Status(200).JSON(fiber.Map{"success": true})
 }

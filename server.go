@@ -49,7 +49,11 @@ func run() {
 		Options: options.Index().SetUnique(true),
 	})
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		// Allow larger JSON bodies so base64/data-URL avatars can be uploaded.
+		// Default may be too small for images encoded as data URLs.
+		BodyLimit: 20 * 1024 * 1024, // 20 MB
+	})
 	// Configure CORS: allow multiple origins from env or default to permissive for header-based auth
 	origins := os.Getenv("ALLOW_ORIGINS")
 	if origins == "" {

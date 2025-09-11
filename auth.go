@@ -156,6 +156,7 @@ func registerHandler(c *fiber.Ctx) error {
 			"_id":       user.ID.Hex(),
 			"name":      user.Name,
 			"username":  user.Username,
+			"avatar":    user.Avatar,
 			"email":     user.Email,
 			"createdAt": user.CreatedAt,
 			"updatedAt": user.UpdatedAt,
@@ -191,6 +192,7 @@ func loginHandler(c *fiber.Ctx) error {
 			"_id":       user.ID.Hex(),
 			"name":      user.Name,
 			"username":  user.Username,
+			"avatar":    user.Avatar,
 			"email":     user.Email,
 			"createdAt": user.CreatedAt,
 			"updatedAt": user.UpdatedAt,
@@ -215,6 +217,7 @@ func meHandler(c *fiber.Ctx) error {
 		"_id":       user.ID.Hex(),
 		"name":      user.Name,
 		"username":  user.Username,
+		"avatar":    user.Avatar,
 		"email":     user.Email,
 		"createdAt": user.CreatedAt,
 		"updatedAt": user.UpdatedAt,
@@ -229,11 +232,35 @@ func updateMeHandler(c *fiber.Ctx) error {
 	var payload struct{
 		Name string `json:"name"`
 		Username string `json:"username"`
+		Avatar *string `json:"avatar"`
 	}
 	if err := c.BodyParser(&payload); err != nil { return c.Status(400).JSON(fiber.Map{"error":"Invalid body"}) }
+	// Debug: log whether avatar was provided and its length (helps diagnose client/server mismatch)
+	if payload.Avatar != nil {
+		if strings.TrimSpace(*payload.Avatar) == "" {
+			fmt.Println("updateMeHandler: avatar provided but empty string (will be removed)")
+		} else {
+			l := len(*payload.Avatar)
+			prefix := (*payload.Avatar)
+			if l > 200 {
+				prefix = prefix[:200]
+			}
+			fmt.Printf("updateMeHandler: avatar provided, length=%d, prefix=%q\n", l, prefix)
+		}
+	} else {
+		fmt.Println("updateMeHandler: avatar not provided in payload")
+	}
 	toSet := bson.M{"updatedAt": time.Now().UTC()}
 	if strings.TrimSpace(payload.Name) != "" { toSet["name"] = strings.TrimSpace(payload.Name) }
 	if strings.TrimSpace(payload.Username) != "" { toSet["username"] = strings.TrimSpace(payload.Username) }
+	if payload.Avatar != nil {
+		// allow setting avatar to null/empty to remove
+		if strings.TrimSpace(*payload.Avatar) == "" {
+			toSet["avatar"] = nil
+		} else {
+			toSet["avatar"] = *payload.Avatar
+		}
+	}
 	if len(toSet) == 1 { // only updatedAt
 		return c.Status(400).JSON(fiber.Map{"error":"No changes"})
 	}
@@ -245,6 +272,7 @@ func updateMeHandler(c *fiber.Ctx) error {
 		"_id": user.ID.Hex(),
 		"name": user.Name,
 		"username": user.Username,
+		"avatar": user.Avatar,
 		"email": user.Email,
 		"createdAt": user.CreatedAt,
 		"updatedAt": user.UpdatedAt,
