@@ -92,16 +92,36 @@ const TodoInput: React.FC<TodoInputProps> = ({
             maxLength={500}
           />
 
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as any)}
-            disabled={disabled || isLoading}
-            className="md:col-span-2 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-4"
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
+          <div className="md:col-span-2 relative">
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as any)}
+              disabled={disabled || isLoading}
+              className="w-full bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-4 pr-10 appearance-none cursor-pointer"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="pointer-events-none absolute top-1/2 transform -translate-y-1/2"
+              style={{ right: "8px", zIndex: 0 }}
+              aria-hidden
+            >
+              <path
+                d="M7 10l5 5 5-5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
 
           <input
             type="date"
@@ -115,7 +135,7 @@ const TodoInput: React.FC<TodoInputProps> = ({
             }}
             disabled={disabled || isLoading}
             min={todayStr}
-            className="md:col-span-3 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-4"
+            className="md:col-span-3 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-4 "
           />
 
           <button
@@ -133,7 +153,7 @@ const TodoInput: React.FC<TodoInputProps> = ({
 
         <div className="flex justify-between items-center mt-3 px-2">
           <div className="text-sm text-slate-400">
-            Press Enter or click "Add Task" to create a new task
+            Press Enter or click "Add" to create a new task
           </div>
           <div className="text-sm text-slate-400">{todoText.length}/500</div>
         </div>

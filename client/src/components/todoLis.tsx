@@ -392,35 +392,96 @@ const TodoList: React.FC<TodoListProps> = ({ starredOnly = false }) => {
               onChange={(e) => setSearch(e.target.value)}
               className="md:col-span-6 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-3"
             />
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as any)}
-              className="md:col-span-3 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-3"
-            >
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-            </select>
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value)}
-              className="md:col-span-3 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-3"
-            >
-              <option value="">All Priorities</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as any)}
-              className="md:col-span-3 bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-3"
-            >
-              <option value="createdDesc">Newest</option>
-              <option value="createdAsc">Oldest</option>
-              <option value="dueAsc">Due soon</option>
-              <option value="dueDesc">Due last</option>
-            </select>
+            <div className="md:col-span-3 relative">
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
+                className="w-full bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-3 pr-10 appearance-none cursor-pointer"
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+              </select>
+              {/* custom arrow: positioned 5px from the right to shift left */}
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="pointer-events-none absolute top-1/2 transform -translate-y-1/2"
+                style={{ right: "8px", zIndex: 0 }}
+                aria-hidden
+              >
+                <path
+                  d="M7 10l5 5 5-5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <div className="md:col-span-3 relative">
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className="w-full bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-3 pr-10 appearance-none cursor-pointer"
+              >
+                <option value="">All Priorities</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="pointer-events-none absolute top-1/2 transform -translate-y-1/2"
+                style={{ right: "8px", zIndex: 0 }}
+                aria-hidden
+              >
+                <path
+                  d="M7 10l5 5 5-5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <div className="md:col-span-3 relative">
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as any)}
+                className="w-full bg-base-100 text-base-content border border-base-300 rounded-xl px-4 py-3 pr-10 appearance-none cursor-pointer"
+              >
+                <option value="createdDesc">Newest</option>
+                <option value="createdAsc">Oldest</option>
+                <option value="dueAsc">Due soon</option>
+                <option value="dueDesc">Due last</option>
+              </select>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="pointer-events-none absolute top-1/2 transform -translate-y-1/2"
+                style={{ right: "8px", zIndex: 0 }}
+                aria-hidden
+              >
+                <path
+                  d="M7 10l5 5 5-5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
           </div>
           {isLoading && null}
         </div>

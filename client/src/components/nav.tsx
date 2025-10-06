@@ -75,28 +75,60 @@ const NavBar: React.FC = () => {
                 </Link>
               </div>
             ) : (
-              <div className="dropdown dropdown-end mr-2">
-                <div tabIndex={0} role="button" className="btn btn-sm bg-base-300/60 flex items-center gap-2">
+              <div className="dropdown dropdown-end mr-2 z-50">
+                <div
+                  tabIndex={0}
+                  role="button"
+                  className="btn btn-sm bg-base-300/60 flex items-center gap-2"
+                >
                   <div className="avatar">
                     {user.avatar ? (
                       <div className="rounded-full w-6 h-6 overflow-hidden">
-                        <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+                        <img
+                          src={user.avatar}
+                          alt="avatar"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     ) : (
                       <div className="avatar placeholder">
                         <div className="bg-neutral text-neutral-content rounded-full w-6">
-                          <span className="text-xs">{(user.username || user.name)?.[0]?.toUpperCase() || "U"}</span>
+                          <span className="text-xs">
+                            {(user.username || user.name)?.[0]?.toUpperCase() ||
+                              "U"}
+                          </span>
                         </div>
                       </div>
                     )}
                   </div>
-                  <span className="text-sm font-semibold">{user.username || user.name}</span>
-                  <svg className="w-4 h-4 opacity-70" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd"/></svg>
+                  <span className="text-sm font-semibold">
+                    {user.username || user.name}
+                  </span>
+                  <svg
+                    className="w-4 h-4 opacity-70"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                 </div>
-                <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-2">
-                  <li><Link to="/profile">Profile</Link></li>
-                  <li><Link to="/wishlist">Wishlist</Link></li>
-                  <li><button onClick={logout}>Logout</button></li>
+                <ul
+                  tabIndex={0}
+                  className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-2"
+                >
+                  <li>
+                    <Link to="/profile">Profile</Link>
+                  </li>
+                  <li>
+                    <Link to="/wishlist">Wishlist</Link>
+                  </li>
+                  <li>
+                    <button onClick={logout}>Logout</button>
+                  </li>
                 </ul>
               </div>
             )}
